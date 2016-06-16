@@ -1,0 +1,15 @@
+---
+layout: {{ layout }}
+title: {{ title }}
+modified:
+author: {{ author }}
+categories: {{ dir }}
+description:
+tags: []
+image:
+  feature:
+  credit:
+  creditlink:
+comments:
+share:
+---

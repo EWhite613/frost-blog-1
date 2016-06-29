@@ -122,7 +122,7 @@ You can also use PhantomJS. We have included bluebird (A library that provides p
 
 ### SlimerJS
 Slimerjs is also another good option. But I've had trouble trying to get SlimerJS launcher to close on Linux with Mocha.
-Here is the launcher I used for `testem.js`
+Here is the launcher I used for `testem.js`.
 
 
 ~~~ javascript
@@ -152,6 +152,8 @@ page.onError = function (msg, trace) {
   })
 }
 ~~~
+
+If you get SlimerJS working on Travis please let me know :)
 
 ### Notes
 * Travis will upload the reports to Imgur

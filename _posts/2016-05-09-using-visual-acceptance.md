@@ -3,7 +3,7 @@ layout: post
 title: Using Ember Visual Acceptance
 author: Eric White
 description: "Using ember-cli-visual-acceptance with ember-frost-file-picker"
-modified: 2016-05-29
+modified: 2016-06-29
 tags: [ember-cli-visual-acceptance]
 ---
 

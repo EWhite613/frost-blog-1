@@ -3,12 +3,42 @@ layout: post
 title: Using Ember Visual Acceptance
 author: Eric White
 description: "Using ember-cli-visual-acceptance with ember-frost-file-picker"
-modified: 2016-06-29
+modified: 2016-07-11
 tags: [ember-cli-visual-acceptance]
 ---
 
 # Installation
  Simple as running `ember install ember-cli-visual-acceptance`
+
+## Testem.json
+
+In order for `ember-cli-visual-acceptance` to capture images, `"launch_in_ci"` must contain ethier `SlimerJsVisualAcceptance` or `PhantomJsVisualAcceptance`. 
+ 
+Example Testem.json:
+
+~~~ javascript
+{
+  "framework": "mocha",
+  "test_page": "tests/index.html?hidepassed",
+  "disable_watching": true,
+  "launch_in_ci": [
+    "SlimerJsVisualAcceptance"
+  ],
+  "launch_in_dev": [
+    "Firefox"
+  ],
+  "launchers": {
+    "PhantomJsVisualAcceptance": {
+      "command": "phantomjs vendor/phantomjs-launcher.js <url>",
+      "protocol": "browser"
+    },
+    "SlimerJsVisualAcceptance": {
+      "command": "slimerjs -jsconsole vendor/phantomjs-launcher.js <url>",
+      "protocol": "browser"
+    }
+  }
+}
+~~~
 
 # Usage
 Inside an integration or acceptance test you can use `return capture('<image-label>')` at the end of an `it()` function.
@@ -69,7 +99,7 @@ test('positional parameter', function(assert) {
 ~~~
 
 ### Larger frame
- Html2Canvas does not handle the `zoom` css property that Mocha uses to scale the `ember-testing` container to `50%`. In order to view a larger container if you wish to go beyond the default 640x340px dimensions you can supply the width and height to the capture function. The following shows an example to get a 1920x4041 container: `capture('<image-label>', 1920, 4041)`.
+In order to go beyond the default 640x340px dimensions you can supply the width and height to the capture function. The following shows an example to get a 1920x4041 container: `capture('<image-label>', 1920, 4041)`.
 
 # Setting up travis
 Replace `ember test` with `ember tva`. This command comes with `ember-cli-visual-acceptance` and provides the functionality for commenting  a report (Stored on Imgur) on a PR from the Travis build.
@@ -98,17 +128,9 @@ before_script:
   * If you put the `VISUAL_ACCEPTANCE_TOKEN` directly in your code and commit it to Github; Github will revoke the token.
 
 ## Browsers
-I prefer using non-headless browsers as their Canvas drawing support (used by [html2canvas](http://html2canvas.hertzen.com/)) is usually better. I find Chrome has the best drawing support, and Firefox second. SlimerJS's Canvas support is probably the best for being a headless browser.
+Previously we used [html2canvas](http://html2canvas.hertzen.com/) to capture the images. But html2canvas is in alpha and their svg/css capturing is less than ideal. Thus we have switched to headless browsers that have the ability to capture images through callbacks.
 
-### Using latest firefox
-Add this to your .travis.yml
-
-~~~ yaml
-addons:
-  firefox: "latest"
-~~~
-
-And enable the display by adding the following to the `before_script` hook: 
+You must enable the display to use headless browsers by adding the following to the `before_script` hook: 
 
 ~~~ yaml
 before_script:
@@ -117,43 +139,61 @@ before_script:
 - sleep 3 # give xvfb some time to start
 ~~~
 
-### Using PhantomJS
-You can also use PhantomJS. We have included bluebird (A library that provides promises) and JQuery in your vendor files. These libraries are both imported when running `ember test`. I recommend using PhantomJS 1.9.8 rather than 2.0. I've had weird experiences with 2.0 but you are welcome to try it.
+Personally I prefer using SlimerJS as their version of Gecko matches the latest Firefox. While PhantomJS Webkit is about a year behind Safari's Webkit version. `SlimerJsVisualAcceptance` images come out much more accurate. Additionally, debugging the images produced from the `.ember-testing-container` in Firefox is useful. Since the `.ember-testing-container` is identical in SlimerJS and Firefox ( at least I've never seen a difference between the two).
 
 ### SlimerJS
-Slimerjs is also another good option. But I've had trouble trying to get SlimerJS launcher to close on Linux with Mocha.
-Here is the launcher I used for `testem.js`.
-
+Testem.json
 
 ~~~ javascript
-/* Testem usage
-'launchers': {
-    'slimerjs': {
-      'command': 'slimerjs slimerjs-launcher.js <url>',
-      'protocol': 'browser'
+{
+  "framework": "mocha",
+  "test_page": "tests/index.html?hidepassed",
+  "disable_watching": true,
+  "launch_in_ci": [
+    "SlimerJsVisualAcceptance"
+  ],
+  "launch_in_dev": [
+    "Firefox"
+  ],
+  "launchers": {
+    "PhantomJsVisualAcceptance": {
+      "command": "phantomjs vendor/phantomjs-launcher.js <url>",
+      "protocol": "browser"
+    },
+    "SlimerJsVisualAcceptance": {
+      "command": "slimerjs -jsconsole vendor/phantomjs-launcher.js <url>",
+      "protocol": "browser"
     }
   }
-*/
-// Doesn't exit on Linux for some reason
-'use strict'
-var system = require('system')
-var page = require('webpage').create()
-var url = system.args[1]
-page.viewportSize = {
-  width: 1024,
-  height: 768
-}
-
-page.open(url)
-page.onError = function (msg, trace) {
-  console.log(msg)
-  trace.forEach(function (item) {
-    console.log('  ', item.file, ':', item.line)
-  })
 }
 ~~~
 
-If you get SlimerJS working on Travis please let me know :)
+### Using PhantomJS
+Testem.json
+
+~~~ javascript
+{
+  "framework": "mocha",
+  "test_page": "tests/index.html?hidepassed",
+  "disable_watching": true,
+  "launch_in_ci": [
+    "PhantomJsVisualAcceptance"
+  ],
+  "launch_in_dev": [
+    "Safari"
+  ],
+  "launchers": {
+    "PhantomJsVisualAcceptance": {
+      "command": "phantomjs vendor/phantomjs-launcher.js <url>",
+      "protocol": "browser"
+    },
+    "SlimerJsVisualAcceptance": {
+      "command": "slimerjs -jsconsole vendor/phantomjs-launcher.js <url>",
+      "protocol": "browser"
+    }
+  }
+}
+~~~
 
 ### Notes
 * Travis will upload the reports to Imgur

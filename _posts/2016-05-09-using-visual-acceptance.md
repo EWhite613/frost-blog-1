@@ -3,7 +3,7 @@ layout: post
 title: Using Ember Visual Acceptance
 author: Eric White
 description: "Using ember-cli-visual-acceptance with ember-frost-file-picker"
-modified: 2016-07-11
+modified: 2016-07-13
 tags: [ember-cli-visual-acceptance]
 ---
 
@@ -116,6 +116,7 @@ before_script:
 - git config credential.helper "store --file=.git/credentials"
 - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
 ~~~
+
 **Secure Variables (Display value in build log = `OFF`)**
 
 * Add `GH_TOKEN` to Travis. Personal Access Token must have push access
@@ -127,8 +128,7 @@ before_script:
 * Add `VISUAL_ACCEPTANCE_TOKEN` token, value can be found [here](https://travis-ci.org/ciena-frost/ember-frost-file-picker/jobs/137522760#L275)
   * If you put the `VISUAL_ACCEPTANCE_TOKEN` directly in your code and commit it to Github; Github will revoke the token.
 
-## Browsers
-Previously we used [html2canvas](http://html2canvas.hertzen.com/) to capture the images. But html2canvas is in alpha and their svg/css capturing is less than ideal. Thus we have switched to headless browsers that have the ability to capture images through callbacks.
+## Browsers - html2canvas vs. PhantomJS render callback
 
 You must enable the display to use headless browsers by adding the following to the `before_script` hook: 
 
@@ -139,9 +139,44 @@ before_script:
 - sleep 3 # give xvfb some time to start
 ~~~
 
+### PhantomJS - SlimerJS
+
+[PhantomJS](http://phantomjs.org/) and [SlimerJS](https://slimerjs.org/) can both be used with this tool to capture images.
+
 Personally I prefer using SlimerJS as their version of Gecko matches the latest Firefox. While PhantomJS Webkit is about a year behind Safari's Webkit version. `SlimerJsVisualAcceptance` images come out much more accurate. Additionally, debugging the images produced from the `.ember-testing-container` in Firefox is useful. Since the `.ember-testing-container` is identical in SlimerJS and Firefox ( at least I've never seen a difference between the two).
 
-### SlimerJS
+#### Warning
+
+With certain repositories I've had trouble with SlimerJS having segmentation faults on both Linux and Mac. I've yet to resolve this issue.
+
+### Html2Canvas
+
+Html2Canvas is used when a browser does not have the function `window.callPhantom` (Only PhantomJS and SlimerJS have this defined). Html2Canvas is still in beta and as result you will see some issues.
+Html2Canvas relies on Canvas drawing support. I find Chrome has the best Canvas drawing support (miles ahead of their competitors), while Firefox has the second best Canvas drawing support. 
+
+#### SVGs
+
+Html2Canvas has difficulties rendering SVGs (more so in Firefox than in Chrome). As a result I have added a new **expermental** functionality that attempts to render the svgs better.
+You can use this experimental feature by setting `experimentalSvgs` to `true` (Example: `capture('svg-experimental', null, null, null, true)`).
+
+Experimental SVGs will not be used for PhantomJS and SlimerJS as their rendering handles SVGs (since it's basically just a simple screenshot of the page)
+
+### Using Firefox
+To use Firefox in Travis simply set
+
+~~~ javascript
+  // Testem.json
+  "launch_in_ci": [
+    "Firefox"
+  ],
+~~~
+And add the following to your `.travis.yml` to get the latest version of Firefox:
+~~~ yaml 
+addons:
+  firefox: "latest"
+~~~
+
+### Using SlimerJS
 Testem.json
 
 ~~~ javascript
@@ -193,6 +228,20 @@ Testem.json
     }
   }
 }
+~~~
+
+## Reports for  multiple browsers
+
+Producing a report for multiple browsers is perfectly fine. All you need to do is add your collection of browsers to `launch_in_ci`.
+
+Example:
+
+~~~ javascript
+// Testem.json
+"launch_in_ci": [
+    "Firefox",
+    "SlimerJsVisualAcceptance"
+  ],
 ~~~
 
 ### Notes

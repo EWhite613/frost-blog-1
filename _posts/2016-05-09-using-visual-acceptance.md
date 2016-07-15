@@ -3,7 +3,7 @@ layout: post
 title: Using Ember Visual Acceptance
 author: Eric White
 description: "Using ember-cli-visual-acceptance with ember-frost-file-picker"
-modified: 2016-07-13
+modified: 2016-07-15
 tags: [ember-cli-visual-acceptance]
 ---
 
@@ -94,12 +94,25 @@ test('positional parameter', function(assert) {
   this.set('markdown', '*hello world*');
   this.render(hbs`{{markdown-to-html markdown}}`);
   assert.equal(this.$('> *').html(), '<p><em>hello world</em></p>');
-  return capture('Markdown', null, null, 0.00, assert);
+  return capture('Markdown', null, null, 0.00, null, assert);
 });
 ~~~
 
 ### Larger frame
 In order to go beyond the default 640x340px dimensions you can supply the width and height to the capture function. The following shows an example to get a 1920x4041 container: `capture('<image-label>', 1920, 4041)`.
+
+### Targeting an element
+ember-cli-visual-acceptance also has the ability to target a specific element. Given a DOM element ember-cli-visual-acceptance will capture the specified element rather than the default `#ember-testing-container`. To target an element you must pass in the DOM element.
+
+#### Target with an id
+~~~javascript
+capture('Markdown', null, null, 0.00, document.getElementById('foo'));
+~~~
+
+#### Target with class selectors
+~~~javascript
+capture('drop-down-container', null, null, 0.00, this.$('.drop-down-container')[0])
+~~~
 
 # Setting up travis
 Replace `ember test` with `ember tva`. This command comes with `ember-cli-visual-acceptance` and provides the functionality for commenting  a report (Stored on Imgur) on a PR from the Travis build.
@@ -157,7 +170,7 @@ Html2Canvas relies on Canvas drawing support. I find Chrome has the best Canvas 
 #### SVGs
 
 Html2Canvas has difficulties rendering SVGs (more so in Firefox than in Chrome). As a result I have added a new **expermental** functionality that attempts to render the svgs better.
-You can use this experimental feature by setting `experimentalSvgs` to `true` (Example: `capture('svg-experimental', null, null, null, true)`).
+You can use this experimental feature by setting `experimentalSvgs` to `true` (Example: `capture('svg-experimental', null, null, 0.00, null, true)`).
 
 Experimental SVGs will not be used for PhantomJS and SlimerJS as their rendering handles SVGs (since it's basically just a simple screenshot of the page)
 
@@ -242,6 +255,25 @@ Example:
     "Firefox",
     "SlimerJsVisualAcceptance"
   ],
+~~~
+
+## `timeout of 2000ms exceeded`
+With Travis you may find you see this error a few times. Sometimes Travis can take a while to run capture (especially if you're using experimentalSvgs and have a lot of svgs on the page), and exceeds the timeout.
+
+To resolve this simply increase the timeout by doing `this.timeout(5000)` in Mocha. I believe in Qunit you do `QUnit.config.testTimeout = 5000`.
+
+In Mocha you can also set the timeout globally in `test-helper.js`:
+
+~~~javascript
+import resolver from './helpers/resolver'
+import { setResolver } from 'ember-mocha'
+import { mocha } from 'mocha'
+
+mocha.setup({
+  // customize as needed
+  timeout: 5000
+})
+setResolver(resolver)
 ~~~
 
 ### Notes

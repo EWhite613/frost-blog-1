@@ -276,6 +276,25 @@ mocha.setup({
 setResolver(resolver)
 ~~~
 
+In `describeComponent` there is no `this.timeout`. So you can set the timeout in the beforeEach fucntion by doing
+
+~~~ javascript
+describeComponent(
+  'frost-select',
+  'Integration: FrostSelectComponent',
+  {
+    integration: true
+  },
+  function () {
+    let props
+    let dropDown
+    beforeEach(function () {
+      this.test._timeout = 6000
+    })
+    ...
+})
+~~~
+
 ### Notes
 * Travis will upload the reports to Imgur
 

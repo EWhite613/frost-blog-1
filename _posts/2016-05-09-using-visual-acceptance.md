@@ -3,7 +3,7 @@ layout: post
 title: Using Ember Visual Acceptance
 author: Eric White
 description: "Using ember-cli-visual-acceptance with ember-frost-file-picker"
-modified: 2016-07-15
+modified: 2016-07-18
 tags: [ember-cli-visual-acceptance]
 ---
 
@@ -94,24 +94,24 @@ test('positional parameter', function(assert) {
   this.set('markdown', '*hello world*');
   this.render(hbs`{{markdown-to-html markdown}}`);
   assert.equal(this.$('> *').html(), '<p><em>hello world</em></p>');
-  return capture('Markdown', null, null, 0.00, null, assert);
+  return capture('Markdown', {assert: assert});
 });
 ~~~
 
 ### Larger frame
-In order to go beyond the default 640x340px dimensions you can supply the width and height to the capture function. The following shows an example to get a 1920x4041 container: `capture('<image-label>', 1920, 4041)`.
+In order to go beyond the default 640x340px dimensions you can supply the width and height to the capture function. The following shows an example to get a 1920x4041 container: `capture('<image-label>', {width: 1920, height: 4041})`.
 
 ### Targeting an element
 ember-cli-visual-acceptance also has the ability to target a specific element. Given a DOM element ember-cli-visual-acceptance will capture the specified element rather than the default `#ember-testing-container`. To target an element you must pass in the DOM element.
 
 #### Target with an id
 ~~~javascript
-capture('Markdown', null, null, 0.00, document.getElementById('foo'));
+capture('Markdown', { targetElement: document.getElementById('foo')});
 ~~~
 
 #### Target with class selectors
 ~~~javascript
-capture('drop-down-container', null, null, 0.00, this.$('.drop-down-container')[0])
+capture('drop-down-container',{ targetElement: this.$('.drop-down-container')[0]})
 ~~~
 
 # Setting up travis
@@ -170,7 +170,7 @@ Html2Canvas relies on Canvas drawing support. I find Chrome has the best Canvas 
 #### SVGs
 
 Html2Canvas has difficulties rendering SVGs (more so in Firefox than in Chrome). As a result I have added a new **expermental** functionality that attempts to render the svgs better.
-You can use this experimental feature by setting `experimentalSvgs` to `true` (Example: `capture('svg-experimental', null, null, 0.00, null, true)`).
+You can use this experimental feature by setting `experimentalSvgs` to `true` (Example: `capture('svg-experimental'{ experimentalSvgs: true})`).
 
 Experimental SVGs will not be used for PhantomJS and SlimerJS as their rendering handles SVGs (since it's basically just a simple screenshot of the page)
 
